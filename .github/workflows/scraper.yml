@@ -1,0 +1,35 @@
+name: Subito Scraper Cron
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Esegue ogni 10 minuti
+  workflow_dispatch:        # Permette l'avvio manuale
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Scraper
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python subito_scraper.py
+
+      - name: Save seen ads
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions@github.com'
+          git add seen_subito.json || true
+          git commit -m "Update seen list" || true
+          git push || true
